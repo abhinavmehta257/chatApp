@@ -1,6 +1,8 @@
 const path = require("path");
 const http = require("http");
 const express = require("express");
+const {generateMessage, generateLocationMessage} = require("./utils/message.js");
+
 const socketIO = require("socket.io");
 
 const publicPath = path.join(__dirname + "/../public")
@@ -29,24 +31,24 @@ io.on('connection', (socket)=>{
     //     text:"hi how are you"
     // });// sending message to clint
     
-   
-    socket.emit("firstMessage",{
-        from:"Admin",
-        text:"Welcome to chat app"
-    })
+   socket.on("createdMessage", (message)=>{
+       io.emit("newMessage",generateMessage(message.from, message.text)); //send message to all but me
+   })
 
-    socket.broadcast.emit("broadcast",{
-        from:"Admin",
-        text:"new user join",
-        createdAt:new Date().getTime()
-    });// broadcast to everyone except me
+    socket.emit("newMessage",generateMessage('admin','Welcome to chat app'));
+
+    socket.broadcast.emit("newMessage",generateMessage('admin','new user entered'));// broadcast to everyone except me
 
     socket.on("disconnect", ()=>{
         console.log("user was disconnected from server");
     });// after dis  connection
+
+    socket.on("createPosition",(coords)=>{
+        io.emit("newlocationMessage", generateLocationMessage('User',coords.lat, coords.lon));
+    })
 });
 
 
 server.listen(port, ()=>{
-    console.log('server is up and running on port : ${port}');
+    console.log(`server is up and running on port : ${port}`);
 })
