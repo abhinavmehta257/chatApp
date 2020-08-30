@@ -7,16 +7,38 @@ function scrollToBottom(){
 socket.on("connect", function(){
     console.log("connectes to server");
 
-    // socket.emit('createMessage',{
-    //     from:"gulla",
-    //     text:"hi how are u"
-    // })
+    let searchQuery = window.location.search.substring(1);
+    let param = JSON.parse('{"' + decodeURI(searchQuery ).replace(/&/g, '","').replace(/\+/g, ' ').replace(/=/g, '":"') + '"}');
+
+    socket.emit('join', param, function(err){
+        if(err){
+            alert("input field empty" + err);
+            window.location.href = '/';
+        }else{
+            console.log("no err");
+        }
+    })
 })// on making the connection
 
 socket.on("disconnect", function(){
     console.log("disconnected from server");
-})// after dis  connection
+})// after disconnection
  
+socket.on('updateUserList', function(users){
+    console.log(users);
+    let ol = document.createElement('ol');
+
+    users.forEach(user => {
+        let li = document.createElement('li');
+        li.innerHTML = user;
+        ol.appendChild(li);
+    });
+    
+    let userList = document.querySelector('#users');
+    userList.innerHTML = '';
+    userList.appendChild(ol);
+})
+
 socket.on("newMessage",function(newMessage){
     
     const template = document.querySelector('#message-template').innerHTML;
@@ -31,33 +53,9 @@ socket.on("newMessage",function(newMessage){
 
     document.querySelector('#messages').appendChild(div);
     scrollToBottom();
-    // const formattedTime = moment(newMessage.createdAt).format('LT');
-    // let li = document.createElement("li");
-    // li.innerText = `${newMessage.from} ${formattedTime}: ${newMessage.text}`;
-
-    // document.querySelector("body").appendChild(li);
-
+    
 });// handles new messages
 
-// socket.on("newlocationMessage", function(newlocationMessage){
-//     console.log("newMessage", newlocationMessage);
-//     let li = document.createElement("li");
-//     let a = document.createElement("a");
-//     a.setAttribute('target', '_blank');
-//     a.setAttribute('herf', newlocationMessage.url);
-//     a.innerText = "My new location";
-//     li.appendChild(a);
-
-//     document.querySelector("body").appendChild(li);
-// })
-
-// socket.on("firstrMessage",function(newMessage){
-//     console.log("newMessage", newMessage);
-// });
-
-// socket.on("broadcast", function(broadcastMessage){
-//     console.log("Broadcast message is", broadcastMessage);
-// })
 
 
 document.querySelector('#submit-btn').addEventListener('click', function(event){
@@ -70,19 +68,19 @@ document.querySelector('#submit-btn').addEventListener('click', function(event){
     })
 }) // send new message
 
-document.querySelector('#send-location').addEventListener('click', function(event){
-    if(!navigator.geolocation){
-        return alert("geo location not supported by your browser");
-    }else{
-        navigator.geolocation.getCurrentPosition(function(position){
-            console.log(position);
-            socket.emit("createPosition",{
-                lat: position.coords.latitude,
-                lon: position.coords.longitude
-            })
-        }, function(err){
-            alert("unable to fetch location :", err);
-        })
-    }
-}) //send location
+// document.querySelector('#send-location').addEventListener('click', function(event){
+//     if(!navigator.geolocation){
+//         return alert("geo location not supported by your browser");
+//     }else{
+//         navigator.geolocation.getCurrentPosition(function(position){
+//             console.log(position);
+//             socket.emit("createPosition",{
+//                 lat: position.coords.latitude,
+//                 lon: position.coords.longitude
+//             })
+//         }, function(err){
+//             alert("unable to fetch location :", err);
+//         })
+//     }
+// }) //send location
     
